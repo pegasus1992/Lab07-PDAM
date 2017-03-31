@@ -1,6 +1,10 @@
 package co.edu.pdam.eci.chatapp;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -8,6 +12,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -15,6 +20,11 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
+import java.util.UUID;
 
 import co.edu.pdam.eci.chatapp.adapter.MessagesAdapter;
 import co.edu.pdam.eci.chatapp.model.Message;
@@ -111,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*public void onSendPhoto(View view) {
+    public void onSendPhoto(View view) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
@@ -126,14 +136,14 @@ public class MainActivity extends AppCompatActivity {
             UploadPostTask uploadPostTask = new UploadPostTask();
             uploadPostTask.execute(imageBitmap);
         }
-    }*/
+    }
 
-    /*@SuppressWarnings("VisibleForTests")
+    @SuppressWarnings("VisibleForTests")
     private class UploadPostTask extends AsyncTask<Bitmap, Void, Void> {
 
         @Override
         protected Void doInBackground(Bitmap... params) {
-            StorageReference storageRef = storage.getReferenceFromUrl("data");
+            StorageReference storageRef = storage.getReferenceFromUrl("gs://lab07-74361.appspot.com/");
 
             Bitmap bitmap = params[0];
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -158,5 +168,5 @@ public class MainActivity extends AppCompatActivity {
 
             return null;
         }
-    }*/
+    }
 }
