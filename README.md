@@ -6,13 +6,14 @@
 
 1) Download the project and make sure it works properly.
 
-2) Add the following Firebase dependencies to your build.gradle file:
+2) Add the following Firebase and Picaso dependencies to your build.gradle file:
 
  ```groovy
       compile 'com.google.firebase:firebase-core:10.2.0'
       compile 'com.google.firebase:firebase-database:10.2.0'
       compile 'com.google.firebase:firebase-auth:10.2.0'
       compile 'com.google.firebase:firebase-storage:10.2.0'
+      compile 'com.squareup.picasso:picasso:2.5.2'
  ```
   
 3) Create an activity called _LoginActivity_ that has a button that will do anonymous authentication with the Firebase service.
@@ -41,7 +42,7 @@
       }
  ```
  
-5) Add the following logic to the onAuthStateChanged method in order to start the _MainActivity_ once the user is authenticated:
+5) Add the following logic to the _onAuthStateChanged_ method in order to start the _MainActivity_ once the user is authenticated:
      
  ```java
      @Override
@@ -56,6 +57,22 @@
      }
  ```     
     
+ 6) Add the following permissions to the _AndroidManifest.xml_ above the _application_ tag
+ 
+ ```xml
+     <uses-permission android:name="android.permission.INTERNET" />
+   ```   
+    
+ 7) Implement the _onClickListener_ for the login button:
+```java
+       public void onLoginClicked( View view )
+     {
+         loginButton.setEnabled( false );
+         firebaseAuth.signInAnonymously();
+     }
+```      
+    
+   
 **Part 2: Saving data to the Firebase Realtime Database**
     
 1) Edit the layout of the _MainActivity_ with the following code:
@@ -217,3 +234,103 @@
   
   
 12) Remove a message from the Firebase console and verify that message is removed from the list correctly.
+
+
+**Part 3: Using the Firebase Storage**
+
+1) Add the following permissions to the Android Manifest above the application tag
+
+```xml
+    <uses-feature
+          android:name="android.hardware.camera"
+          android:required="true" />
+  ```
+
+
+
+1) Implement a the clickListener for the button Send Photo with the following code to be able
+
+```java
+    public void onSendPhotoClicked( View view )
+   {
+       Intent takePictureIntent = new Intent( MediaStore.ACTION_IMAGE_CAPTURE );
+       if ( takePictureIntent.resolveActivity( getPackageManager() ) != null )
+       {
+           startActivityForResult( takePictureIntent, REQUEST_IMAGE_CAPTURE );
+       }
+   }
+  ```
+  
+2) Process the result and obtain the captured photo by overriding the _onActivityResult_ method.
+
+```java
+   @Override
+   protected void onActivityResult( int requestCode, int resultCode, Intent data )
+   {
+       if ( requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK )
+       {
+
+           Bundle extras = data.getExtras();
+           Bitmap imageBitmap = (Bitmap) extras.get( "data" );
+           UploadPostTask uploadPostTask = new UploadPostTask();
+           uploadPostTask.execute( imageBitmap );
+       }
+   }
+  ```
+
+ 3) Create the _UploadPostTask_ class by extending the _AsyncTask_ class:
+ 
+ ```java
+  @SuppressWarnings("VisibleForTests")
+  private class UploadPostTask
+      extends AsyncTask<Bitmap, Void, Void>
+  {
+
+      @Override
+      protected Void doInBackground( Bitmap... params )
+      {
+          Bitmap bitmap = params[0];
+          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+          bitmap.compress( Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream );
+          storageRef.child( UUID.randomUUID().toString() + "jpg" ).putBytes(
+              byteArrayOutputStream.toByteArray() ).addOnSuccessListener(
+              new OnSuccessListener<UploadTask.TaskSnapshot>()
+              {
+                  @Override
+                  public void onSuccess( UploadTask.TaskSnapshot taskSnapshot )
+                  {
+                      if ( taskSnapshot.getDownloadUrl() != null )
+                      {
+                          String imageUrl = taskSnapshot.getDownloadUrl().toString();
+                          final Message message = new Message( imageUrl );
+                          runOnUiThread( new Runnable()
+                          {
+                              @Override
+                              public void run()
+                              {
+                                  messagesAdapter.addMessage( message );
+                              }
+                          } );
+                      }
+                  }
+              } );
+
+          return null;
+      }
+  }
+  
+   ```
+ 
+ 
+ 4) Test that your application works and your image is uplaoded correctly.
+ 
+ 
+ **Part 4: Bonus**
+ 
+ Implement a dialog that is shown when the user clicks the Send Photo button that allows the user to not only take a picture but also select the image from the user images.
+ 
+ 
+ Dialogs: https://developer.android.com/guide/topics/ui/dialogs.html
+ 
+ Image Picker: http://stackoverflow.com/questions/5309190/android-pick-images-from-gallery
+ 
